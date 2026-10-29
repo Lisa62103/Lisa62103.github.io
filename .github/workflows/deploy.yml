@@ -17,6 +17,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: development
+      NPM_CONFIG_PRODUCTION: "false"
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,6 +36,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --include=dev --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
+
+      - name: Verify build dependencies
+        run: |
+          if [ ! -x node_modules/.bin/vite ] || [ ! -x node_modules/.bin/tsc ]; then
+            npm install --include=dev --no-save --no-audit --no-fund
+          fi
+          test -x node_modules/.bin/vite
+          test -x node_modules/.bin/tsc
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
